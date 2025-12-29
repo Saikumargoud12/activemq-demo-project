@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="fdf838d6-4eb8-427f-a76a-6956c8759066" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="dcb0de08-2806-4ea5-8fb5-17533edc7dbb" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<jms:config name="JMS_Config1" doc:name="JMS Config" doc:id="0bda11d2-57d5-4466-b37a-b7fc2c394c40" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="active-mq-demo-projectFlow" doc:id="7c3652b2-797d-4197-b61d-00ae7857aea1" >
+		<http:listener doc:name="Listener" doc:id="45ccfdb9-b615-46a2-8b13-cd54fe4f8df0" config-ref="HTTP_Listener_config" path="/activemqpublisher"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7b9cdc5f-d25c-4424-9848-3741086d4557" />
+		<jms:publish doc:name="Publish" doc:id="6b8e26af-db94-426f-a412-e4f7758bf2ec" config-ref="JMS_Config" destination="Q.TEST">
+			<jms:message >
+				<jms:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+  lastName: "Frank Doe",
+  Email: "Frank.doe@stg-tech.com"
+}]]]></jms:body>
+			</jms:message>
+		</jms:publish>
+		<logger level="INFO" doc:name="Logger" doc:id="2fabc59b-9a3c-457e-a979-032cc5cce6ec" message="#[payload]"/>
+	</flow>
+	<flow name="active-mq-demo-projectFlow1" doc:id="1d770555-3b94-41e4-8620-aca6b4c833e6" >
+		<http:listener doc:name="Listener" doc:id="e8e45686-80a1-43e4-829d-062de41bbcf4" config-ref="HTTP_Listener_config" path="/consume"/>
+		<logger level="INFO" doc:name="Logger" doc:id="8fa8d482-2aaf-4bb6-8184-8e7b59ecbc4f" />
+		<jms:consume doc:name="Consume" doc:id="cbc8ecb7-cd80-4b01-930d-27ad660ccbba" config-ref="JMS_Config1" destination="T.TEST">
+			<jms:consumer-type >
+				<jms:topic-consumer />
+			</jms:consumer-type>
+		</jms:consume>
+		<logger level="INFO" doc:name="Logger" doc:id="b0bfeb76-321b-4062-9426-f1ddb9eaf5f0" message="#[payload]"/>
+	</flow>
+</mule>
